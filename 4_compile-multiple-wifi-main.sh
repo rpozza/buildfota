@@ -22,6 +22,6 @@ do
    GPS_LAT=`jq -r -c '.Clients' gps_coords.json | jq '.[] | select(.Name=="'$CLIENT'")' | jq -c -r '.Latitude'`
    GPS_LON=`jq -r -c '.Clients' gps_coords.json | jq '.[] | select(.Name=="'$CLIENT'")' | jq -c -r '.Longitude'`
    GPS_ALT=`jq -r -c '.Clients' gps_coords.json | jq '.[] | select(.Name=="'$CLIENT'")' | jq -c -r '.Altitude'`
-   ./2_compile-single.sh "$CLIENT" "$SERVER_LWM2M" "$PSKID" "$PSKPW" "$WIFI_SSID" "$WIFI_PWD"
+   ./2_compile-single.sh "$CLIENT" "$SERVER_LWM2M" "$PSKID" "$PSKPW" "$WIFI_SSID" "$WIFI_PWD" "$GPS_LAT" "$GPS_LON" "$GPS_ALT"
    sleep 1
 done
