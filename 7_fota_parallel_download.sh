@@ -16,5 +16,7 @@ RANGE_OUT=$2
 
 for ITN in `seq -f "%03g" $RANGE_IN $RANGE_OUT`
 do
+   TEST=`ls $NAME$ITN*`
+   [ -z "$TEST" ] && continue
    sem -j$NTHREADS "./6_fota_binary_downloader.py -c $NAME$ITN >& ./download_log_$ITN"
 done

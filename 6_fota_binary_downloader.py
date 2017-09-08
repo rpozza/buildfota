@@ -14,7 +14,6 @@ with open('lwm2mconfig.json') as config_file:
 
 hostname = config_data["LWM2MAPIServer"]
 port = config_data["LWM2MAPIPort"]
-max_number_attemps = 5
 
 # objects definition
 firmware = 5
@@ -28,6 +27,9 @@ fwuri = 1
 fwstate = 3
 fwresult = 5
 
+# delays definition
+max_number_attemps = 25
+delay_increments = 0.2
 
 def main():
     # Define and parse command line arguments
@@ -52,49 +54,42 @@ def main():
             if response == True:
                 break
 
-            time.sleep(2)
         #temperature
         while True:
             response = cancelobservation(hostname, port, cname, 3303)
             if response == True:
                 break
 
-            time.sleep(2)
         #humidity
         while True:
             response = cancelobservation(hostname, port, cname, 3304)
             if response == True:
                 break
 
-            time.sleep(2)
         #loudness
         while True:
             response = cancelobservation(hostname, port, cname, 3324)
             if response == True:
                 break
 
-            time.sleep(2)
         #concentration
         while True:
             response = cancelobservation(hostname, port, cname, 3325)
             if response == True:
                 break
 
-            time.sleep(2)
         #distance
         while True:
             response = cancelobservation(hostname, port, cname, 3330)
             if response == True:
                 break
 
-            time.sleep(2)
         #multistate
         while True:
             response = cancelobservation(hostname, port, cname, 3348)
             if response == True:
                 break
 
-            time.sleep(2)
 
         #0: wait for the client to be ready
         while True:
@@ -104,8 +99,6 @@ def main():
                     # erased
                     print "Client " + str(cname) + " Ready!"
                     break
-
-            time.sleep(2)
 
         #1: erase flash memory (send "start" command)
         sys.stdout.write("Now, Erasing Flash Memory...")
@@ -122,8 +115,6 @@ def main():
                     #erased
                     print "Erased!"
                     break
-
-            time.sleep(2)
 
         print "Now, Downloading Firmware!"
         page_number = 0
@@ -155,7 +146,6 @@ def main():
                     print "Page " + str(page_number) + " Sent!"
                     break
                 # give some time for recovery from registration fails, connectivity
-                time.sleep(5)
                 print "Failed"
                 sys.stdout.write("Retrying Page " + str(page_number) + "...")
                 sys.stdout.flush()
@@ -169,8 +159,6 @@ def main():
                         print "Page " + str(page_number) + " Written to Flash!"
                         break
 
-                time.sleep(2)
-
             # 6: retrieve the page just written to the external flash
             sys.stdout.write("Reading Page " + str(page_number) + "...")
             sys.stdout.flush()
@@ -178,8 +166,6 @@ def main():
                 response, packet = getvalue(hostname, port, cname, fwpackage)
                 if response == requests.codes.ok:
                     break
-
-                time.sleep(2)
 
             externalflashpage = ''.join(packet).upper()
 
@@ -206,8 +192,6 @@ def main():
                     print "Stop Address written!"
                     break
 
-            time.sleep(2)
-
         # 9: check if the state is downloaded
         while True:
             response, value = getvalue(hostname, port, cname, fwstate)
@@ -217,15 +201,11 @@ def main():
                     print "Ready for Finalization!"
                     break
 
-            time.sleep(2)
-
         # 10: retrieve the final software version downloaded
         while True:
             response, packet = getvalue(hostname, port, cname, fwpackage)
             if response == requests.codes.ok:
                 break
-
-            time.sleep(2)
 
         print "Stop Address is " + binascii.unhexlify(''.join(packet).upper()) + " !"
 
@@ -244,8 +224,6 @@ def main():
                     print "Magic Number written!"
                     break
 
-            time.sleep(2)
-
         # 13: check if the state is downloaded
         while True:
             response, value = getvalue(hostname, port, cname, fwstate)
@@ -255,15 +233,11 @@ def main():
                     print "Ready for Update!"
                     break
 
-            time.sleep(2)
-
         # 14: retrieve the final software version downloaded
         while True:
             response, packet = getvalue(hostname, port, cname, fwpackage)
             if response == requests.codes.ok:
                 break
-
-            time.sleep(2)
 
         print "New Software " + binascii.unhexlify(''.join(packet).upper()) + " Has Been Downloaded to External Flash!"
         closebinaryhandlers(fhand)
@@ -279,12 +253,15 @@ def getclientlist(fqdn, port):
     clientslist = []
     fullurl = "http://" + fqdn + ":" + str(port) + "/api/clients?"
     while attempts < max_number_attemps:
-        r = requests.get(fullurl)
         attempts += 1
+        time.sleep(attempts * delay_increments)
+        r = requests.get(fullurl)
+        sys.stdout.write(str(attempts) + "..")
         if r.status_code == requests.codes.ok:
             for clients in r.json():
                 clientslist.append(str(clients['endpoint']))
             return clientslist
+
     print "Error! cannot retrieve clients list!"
     raise SystemExit
 
@@ -300,13 +277,19 @@ def getvalue(fqdn, port, client, resource):
     objecturl = "/" + str(firmware) + "/" + str(instance_number) + "/" + str(resource)
     fullurl = "http://" + fqdn + ":" + str(port) + "/api/clients/" + client + objecturl
     while attempts < max_number_attemps:
-        r = requests.get(fullurl)
         attempts += 1
+        time.sleep(attempts * delay_increments)
+        r = requests.get(fullurl)
+        sys.stdout.write(str(attempts) + "..")
         if r.status_code == requests.codes.ok:
-            value = r.json()['content']['value']
-            return r.status_code,value
-
-        time.sleep(attempts * 0.2)
+            try:
+                value = r.json()['content']['value']
+                return r.status_code, value
+            except KeyError as e:
+                print "KeyError:" + str(e)
+                r.status_code = requests.codes.internal_server_error
+                value = r
+                return r.status_code,value
 
     print "Maximum Number of Attempts achieved!"
     return r.status_code,-1
@@ -318,11 +301,12 @@ def putvaluejson(fqdn, port, client, resource, datavalue):
     fullurl = "http://" + fqdn + ":" + str(port) + "/api/clients/" + client + objecturl
     attempts = 0
     while attempts < max_number_attemps:
-        r = requests.put(fullurl,headers=header_json, json=payload_now)
         attempts += 1
+        time.sleep(attempts * delay_increments)
+        r = requests.put(fullurl,headers=header_json, json=payload_now)
+        sys.stdout.write(str(attempts) + "..")
         if r.status_code == requests.codes.ok:
             return r.status_code
-        time.sleep(attempts * 0.2)
 
     print "Maximum Number of Attempts achieved!"
     return r.status_code
@@ -332,12 +316,12 @@ def deletevalue(fqdn, port, client, object, resource):
     objecturl = "/" + str(object) + "/" + str(instance_number) + "/" + str(resource)
     fullurl = "http://" + fqdn + ":" + str(port) + "/api/clients/" + client + objecturl + "/observe"
     while attempts < max_number_attemps:
-        r = requests.delete(fullurl)
         attempts += 1
+        time.sleep(attempts * delay_increments)
+        r = requests.delete(fullurl)
+        sys.stdout.write(str(attempts) + "..")
         if r.status_code == requests.codes.ok:
             return True
-
-        time.sleep(attempts * 0.2)
 
     print "Maximum Number of Attempts achieved!"
     return False
@@ -347,12 +331,12 @@ def cancelobservation(fqdn, port, client, object):
     objecturl = "/" + str(object) + "/" + str(instance_number)
     fullurl = "http://" + fqdn + ":" + str(port) + "/api/clients/" + client + objecturl + "/observe"
     while attempts < max_number_attemps:
-        r = requests.delete(fullurl)
         attempts += 1
+        time.sleep(attempts * delay_increments)
+        r = requests.delete(fullurl)
+        sys.stdout.write(str(attempts) + "..")
         if r.status_code == requests.codes.ok:
             return True
-
-        time.sleep(attempts * 0.2)
 
     print "Maximum Number of Attempts achieved!"
     return False
@@ -362,12 +346,12 @@ def postvalue(fqdn, port, client, resource):
     objecturl = "/" + str(firmware) + "/" + str(instance_number) + "/" + str(resource)
     fullurl = "http://" + fqdn + ":" + str(port) + "/api/clients/" + client + objecturl
     while attempts < max_number_attemps:
-        r = requests.post(fullurl)
         attempts += 1
+        time.sleep(attempts * delay_increments)
+        r = requests.post(fullurl)
+        sys.stdout.write(str(attempts) + "..")
         if r.status_code == requests.codes.ok:
             return True
-
-        time.sleep(attempts * 0.2)
 
     print "Maximum Number of Attempts achieved!"
     return False
