@@ -8,14 +8,14 @@ if [ $# -ne 1 ]; then
    exit
 fi
 
-RANGE=($(jq -c '.Clients | length' $1))
-SERVER_LWM2M=($(jq -r -c '.LWM2MServer' lwm2mconfig.json))
-WIFI_SSID=($(jq -r -c '.WifiSSID' lwm2mconfig.json))
-WIFI_PWD=($(jq -r -c '.WifiPassword' lwm2mconfig.json))
+RANGE=$(jq -c '.Clients | length' $1)
+SERVER_LWM2M=$(jq -r -c '.LWM2MServer' lwm2mconfig.json)
+WIFI_SSID=$(jq -r -c '.WifiSSID' lwm2mconfig.json)
+WIFI_PWD=$(jq -r -c '.WifiPassword' lwm2mconfig.json)
 for ITER in `seq 1 $RANGE`
 do
    ITMIN=$((ITER-1))
-   TEST=($(jq -c '.Clients['$ITMIN']' $1))
+   TEST=$(jq -c '.Clients['$ITMIN']' $1)
    CLIENT=`jq -r -c '.Name' <(echo "$TEST")`
    PSKID=`jq -r -c '.PskId' <(echo "$TEST")`
    PSKPW=`jq -r -c '.PskPwd' <(echo "$TEST")`
