@@ -6,4 +6,6 @@
 ./4_compile-multiple-wifi-main.sh config/third-batch-unis.json
 ./4_compile-multiple-wifi-main.sh config/fourth-batch-unis.json
 ./4_compile-multiple-wifi-main.sh config/fifth-batch-unis.json
+./4_compile-multiple-wifi-main.sh config/fujitsu-hay.json
+./4_compile-multiple-wifi-main.sh config/fujitsu-ics.json
 
