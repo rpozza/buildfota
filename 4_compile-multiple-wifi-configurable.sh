@@ -1,17 +1,17 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then 
-   echo "Usage: $0 config_file"
+if [ $# -ne 2 ]; then 
+   echo "Usage: $0 config_file wifi_config_number"
    echo " "
-   echo "Example: $0 foo.json"
+   echo "Example: $0 foo.json 2"
    echo " "	   
    exit
 fi
 
 RANGE=$(jq -c '.Clients | length' $1)
 SERVER_LWM2M=$(jq -r -c '.LWM2MServer' lwm2mconfig.json)
-WIFI_SSID=$(jq -r -c '.WifiSSID3' lwm2mconfig.json)
-WIFI_PWD=$(jq -r -c '.WifiPassword3' lwm2mconfig.json)
+WIFI_SSID=$(jq -r -c '.WifiSSID'$2 lwm2mconfig.json)
+WIFI_PWD=$(jq -r -c '.WifiPassword'$2 lwm2mconfig.json)
 for ITER in `seq 1 $RANGE`
 do
    ITMIN=$((ITER-1))

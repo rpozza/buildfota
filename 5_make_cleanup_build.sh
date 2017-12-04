@@ -1,5 +1,6 @@
 #!/bin/bash
 
+git -C ../deskegg/SDK/libraries/tests/sbl/ checkout clean-ext
 #Remapping Flash scatter, building and making SECONDARY BOOT LOADER
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.sblignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.c
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.sblignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.ld
@@ -8,3 +9,4 @@ cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHA
 cp ../deskegg/SDK/build/test/ARCH_PRO/GCC_ARM/SBL/sbl.bin .
 
 mv sbl.bin cleanup.bin
+git -C ../deskegg/SDK/libraries/tests/sbl/ checkout master

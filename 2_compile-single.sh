@@ -8,6 +8,7 @@ if [ $# -ne 9 ]; then
    exit
 fi
 
+git -C ../deskegg/SDK/libraries/tests/sbl/ checkout master
 #Remapping Flash scatter, building and making SECONDARY BOOT LOADER
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.sblignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.c
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.sblignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.ld
