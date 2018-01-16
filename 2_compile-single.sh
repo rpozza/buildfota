@@ -1,26 +1,27 @@
 #!/bin/bash
 
-if [ $# -ne 9 ]; then 
-   echo "Usage: $0 client_name hostname psk_id psk_pwd wifi_ssid wifi_pwd api_hostname api_port latitude longitude altitude"
+if [ $# -ne 10 ]; then 
+   echo "Usage: $0 client_name hostname psk_id psk_pwd wifi_ssid wifi_pwd api_hostname api_port latitude longitude altitude magic_code"
    echo " "
-   echo "Example: $0 mylwmwmclient myserver client_id client_pswd my_wifi 1234 0 0 0"
+   echo "Example: $0 mylwmwmclient myserver client_id client_pswd my_wifi 1234 0 0 0 1234"
    echo " "	   
    exit
 fi
 
-git -C ../deskegg/SDK/libraries/tests/sbl/ checkout master
 #Remapping Flash scatter, building and making SECONDARY BOOT LOADER
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.sblignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.c
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.sblignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.ld
 ../deskegg/SDK/workspace_tools/build.py -"mARCH_PRO" -"tGCC_ARM" -"c" -"v" -"r" -"x"
-../deskegg/SDK/workspace_tools/make.py -"mARCH_PRO" -"tGCC_ARM" -"p137" -"v" -"c"
+../deskegg/SDK/workspace_tools/make.py -"mARCH_PRO" -"tGCC_ARM" -"p137" -"v" -"c" -"DMAGIC_CODE=\"${10}\"" -"DLWM2M_CLIENTNAME=\"$1\"" -"DLWM2M_WIFI_SSID=\"$5\"" -"DLWM2M_WIFI_PSWD=\"$6\"" 
 cp ../deskegg/SDK/build/test/ARCH_PRO/GCC_ARM/SBL/sbl.bin .
+
+#exit 1
 
 #Remapping Flash scatter, building and making Wakaama FW
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.eggignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/cmsis_nvic.c
 cp ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.eggignore ../deskegg/SDK/libraries/mbed/targets/cmsis/TARGET_NXP/TARGET_LPC176X/TOOLCHAIN_GCC_ARM/LPC1768.ld
 ../deskegg/SDK/workspace_tools/build.py -"mARCH_PRO" -"tGCC_ARM" -"c" -"v" -"r" -"x"
-../deskegg/SDK/workspace_tools/make.py -"mARCH_PRO" -"tGCC_ARM" -"p135" -"v" -"c" -"DLWM2M_LITTLE_ENDIAN" -"DLWM2M_CLIENT_MODE" -"DWITH_TINYDTLS" -"DWITH_SHA256" -"DLWM2M_CLIENTNAME=\"$1\"" -"DLWM2M_SERVER_HOSTNAME=\"$2\"" -"DLWM2M_PRESHAREDKEY_CLIENTID=\"$3\"" -"DLWM2M_PRESHAREDKEY_CLIENTPSWD=\"$4\"" -"DLWM2M_WIFI_SSID=\"$5\"" -"DLWM2M_WIFI_PSWD=\"$6\"" -"DLWM2M_GPS_LAT=$7" -"DLWM2M_GPS_LON=$8" -"DLWM2M_GPS_ALT=$9"
+../deskegg/SDK/workspace_tools/make.py -"mARCH_PRO" -"tGCC_ARM" -"p135" -"v" -"c" -"DLWM2M_LITTLE_ENDIAN" -"DLWM2M_CLIENT_MODE" -"DWITH_TINYDTLS" -"DWITH_SHA256" -"DLWM2M_CLIENTNAME=\"$1\"" -"DLWM2M_SERVER_HOSTNAME=\"$2\"" -"DLWM2M_PRESHAREDKEY_CLIENTID=\"$3\"" -"DLWM2M_PRESHAREDKEY_CLIENTPSWD=\"$4\"" -"DLWM2M_WIFI_SSID=\"$5\"" -"DLWM2M_WIFI_PSWD=\"$6\"" -"DLWM2M_GPS_LAT=$7" -"DLWM2M_GPS_LON=$8" -"DLWM2M_GPS_ALT=$9" -"DMAGIC_CODE=\"${10}\""
 cp ../deskegg/SDK/build/test/ARCH_PRO/GCC_ARM/WakaamaDTLS/client.bin .
 
 #Generating Blank 64K image
